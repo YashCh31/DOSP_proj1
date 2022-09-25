@@ -35,8 +35,12 @@ Please make sure you have erlang is installed in the system.
 Create two nodes using “erl -sname c” for client and “erl -sname s” for server.
 Compile both the server and client files in the respective terminals.  Run the commands “c(bcms_c).” and “c(bcms_s).” to compile both the files.
 You need to register the server and the client worker by running “bcms_s:reg()” and “bcms_c:reg()” in their respective terminals.
+https://github.com/YashCh31/DOSP_proj1/blob/main/Project1%202/Screenshots/Initialising%20the%20Client.png
 Execute the init function of the server by running “bcms_s:init().” Here, the terminal prompts the user to enter the number of 0s.
+https://github.com/YashCh31/DOSP_proj1/blob/main/Project1%202/Screenshots/Initialising%20the%20server%20and%20entering%20the%20Number%20of%200s.png
 Connect the client to the server by typing “bcms_c:connect(‘Device ID of the server’).” This connects the client to the server. The client receives the job from the server starts mining once it is connected.
+https://github.com/YashCh31/DOSP_proj1/blob/main/Project1%202/Screenshots/Connection%20between%20client%20and%20server%20established.png
+https://github.com/YashCh31/DOSP_proj1/blob/main/Project1%202/Screenshots/Connecting%20the%20client%20to%20server.png
 
 
 ### Machine Details
@@ -66,6 +70,8 @@ Result of Running the program for finding hash with 4 0s and client spawning 8 w
 CPU Time = 115000 Microseconds
 Real Time = 39000 Microseconds
 Ratio of CPU Utilisation = 2.948
+
+https://github.com/YashCh31/DOSP_proj1/blob/main/Project1%202/Screenshots/Ouput%20for%204%200s..png
 
 When we try to run only the server for finding hash starting with 3 0s without connecting the client.
 
