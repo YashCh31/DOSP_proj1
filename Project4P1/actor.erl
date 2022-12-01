@@ -1,26 +1,15 @@
-%% This is a simple single-actor example implementation of the project.
-%%
-%% It will create an actor per client connection, and one actor to represent
-%% all internal state (all users, their subscriptions, and their tweets).
-%%
-%% This implementation is provided with unit tests. However, these tests are
-%% neither complete nor implementation independent. Thus, be careful when
-%% reusing them.
+% It will create an actor per client connection, and one actor to represent
+% all internal state (all users, their subscriptions, and their tweets).
+%
 -module(actor).
 
-%%
-%% Include files
-%%
 -include_lib("eunit/include/eunit.hrl").
 
-%%
-%% Macro setting
-%%
+%
+% Macro setting
+%
 -define(NUM_OF_DATA_ACTORS, 10).
 
-%%
-%% Exported Functions
-%%
 -export([initialize/0,
          register_user/0,
          subscribe/3,
@@ -29,10 +18,6 @@
          data_actor/1,
          entry_actor/0]).
 
-
-%%
-%% API Functions
-%%
 
 % Start api.
 initialize() ->
@@ -71,17 +56,14 @@ data_actor(Data) ->
     receive        
         {update, _Sender, register_user} ->
             {NewData, _NewUserId} = add_new_user({update, Data}),
-            % do not send any msg back
             data_actor(NewData);
 
         {update, _Sender, tweet,        UserId, Tweet} ->
             {NewData, _Timestamp} = tweet(Data, UserId, Tweet),
-            % do not send any msg back
             data_actor(NewData);
 
         {update, _Sender, subscribe,    UserId, UserIdToSubscribeTo} ->
             NewData = subscribe_to_user(Data, UserId, UserIdToSubscribeTo),
-            % do not send any msg back
             data_actor(NewData);
 
         {Sender, register_user} ->
@@ -146,9 +128,9 @@ entry_actor() ->
     end,
     entry_actor().
 
-%%
-%% Internal Functions
-%%
+%
+% Internal Functions
+%
 
 % Update new user, do not need to spawn an entry_actor
 add_new_user({update, Data}) ->

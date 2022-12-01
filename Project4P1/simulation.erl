@@ -1,41 +1,17 @@
-%% This module generates some workload for the twitter application
-%% in a certain way - of course, this covers only one particular scenario
-%% 
-%% Its interface allows to specify some hooks in your code where the 
-%% methods can be found for initialization, user registration and 
-%% user subscription. Of course, it expects them to return the same results
-%% as in the example "actor.erl".
-%%
-%% It defines a user profile based on the following parameters
-%% NumberOfUsers : number of users to be created
-%% Subscriptions : number of followers for each user
-%% ActionCount   : how many times each action (tweet, get_tweets, get_timeline)
-%%                 is repeated for each user
-%%
-%% Actions can be run in order (first all tweets, then all get_tweets, etc...) or
-%% can be interleaved.
-%%
-%% Tweets are generated randomly. If you feel this is a heavy burden, just change
-%% the text string to "Hello World" which will save you a lot of RAM and CPU time.
-%%
-%% Now and then, some statistics are printed to the screen.
+% This module generates some data for twitter application
+%
+% Tweets are generated randomly.
+%
+% Sstatistics are printed to the screen.
 
 -module(simulation).
 
-%%
-%% Exported Functions
-%%
 -export([start/0, generate_users/2, generate_subscriptions/3, exec_tweet/1,
 	exec_get_tweets/2, exec_get_timeline/1]).
 
 
-%% the start() method can be extended to your other configuration
-%% for the moment, only the actor is sopported
 start() -> start_server_single_actor().
-%% start() -> start_server_my_new_actor().
 
-%% different configurations can be tested with this scenario
-%% here is where you enter your application's hooks for initialization,
 %% user registration and user subscription.
 start_server_single_actor() ->
 	erlang:display("Load test for: actor"),
@@ -46,14 +22,14 @@ start_server_single_actor() ->
 %% generic start method
 start(Initializer, Registrar, Subscriber) ->
 
-	% call the initialize() method for the configuration we want to test 
+	% configuration we want to test 
 	Initializer(),
 	
 	% initialize statistics: put this anywhere you want to start measuring
 	statistics(runtime),
 	statistics(wall_clock),
 
-	% user configuration
+	% user configuration in simulation
 	% UserType = {NumberOfUsers, Subscriptions, ActionCount}
 	% NumberOfUsers : number of users to be created
 	% Subscriptions : number of followers for each user
@@ -64,11 +40,9 @@ start(Initializer, Registrar, Subscriber) ->
 	% generate users, result is a list of {UserId, Pid}
 	Users = generate_users(UserType, Registrar),
 
-	% generate subscriptions
 	generate_subscriptions(Users, UserType, Subscriber),
 	print_statistics("Statistics for: Generating users and their subscriptions"),
 	
-	% execute the other actions: by action type, or interleaved
 	execute_actions_by_type(Users, UserType),
 	% execute_actions_interleaved(Users, UserType),
 
@@ -169,15 +143,17 @@ exec_get_timeline(Users) ->
 					 end,
 					 Users).
 					 
-% prints statistics in a very rudimentary way
+% prints statistics
 print_statistics(Title) ->
 	erlang:display(Title),
 	{_, RunTime} = statistics(runtime),
 	{_, ClockTime} = statistics(wall_clock),
 	Time1 = io_lib:format("~.3f",[RunTime / 1000.0]),
 	Time2 = io_lib:format("~.3f",[ClockTime / 1000.0]),
-	erlang:display("Runtime / Clock"),
-	erlang:display(Time1 ++ Time2).
+	%erlang:display("Runtime / Clock"),
+	%erlang:display(Time1 ++ Time2).
+	erlang:display("Runtime " ++ Time1),
+	erlang:display("Clocktime " ++ Time2).
 	
 % creates and returns a tweet by randomly selecting some words from predefined lists
 get_random_tweet_text() ->
