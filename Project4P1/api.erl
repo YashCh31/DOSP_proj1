@@ -31,6 +31,6 @@ get_tweets(ServerPid, UserId, Page) ->
 tweet(ServerPid, UserId, Tweet) ->
     ServerPid ! {self(), tweet, UserId, Tweet},
     receive
-        {ServerPid, tweet_accepted, UserId, Timestamp} ->
-            [{"tweeted successfully", UserId, Timestamp, Tweet}]
+        {ServerPid, tweet_accepted, UserId, Timestamp, TweetId} ->
+            [{"tweeted successfully", UserId, Timestamp, TweetId, Tweet}]
     end.

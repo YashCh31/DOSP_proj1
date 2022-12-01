@@ -59,7 +59,7 @@ data_actor(Data) ->
             data_actor(NewData);
 
         {update, _Sender, tweet,        UserId, Tweet} ->
-            {NewData, _Timestamp} = tweet(Data, UserId, Tweet),
+            {NewData, _Timestamp, DateTime, TweetId} = tweet(Data, UserId, Tweet),
             data_actor(NewData);
 
         {update, _Sender, subscribe,    UserId, UserIdToSubscribeTo} ->
@@ -85,13 +85,13 @@ data_actor(Data) ->
             Sender ! {self(), tweets,   UserId, Page, tweets(Data, UserId, Page)},
             data_actor(Data);
         
-        {Sender, tweet,        UserId, Tweet} ->
+        {Sender, tweet, UserId, Tweet} ->
             {_ThisName, DataActor_list_others} = get_data_actors(),
             % Forward this msg to other data_actors
             [whereis(OtherActor) ! {update, Sender, tweet, UserId, Tweet} 
              || OtherActor<-DataActor_list_others],
-            {NewData, Timestamp} = tweet(Data, UserId, Tweet),
-            Sender ! {self(), tweet_accepted, UserId, Timestamp},
+            {NewData, Timestamp, DateTime, TweetId} = tweet(Data, UserId, Tweet),
+            Sender ! {self(), tweet_accepted, UserId, DateTime, TweetId},
             data_actor(NewData);
 
         {Sender, subscribe,    UserId, UserIdToSubscribeTo} ->
@@ -163,11 +163,13 @@ tweets(Data, UserId, _Page) ->
 
 tweet(Data, UserId, Tweet) ->
     {user, UserId, Tweets, Subscriptions} = lists:nth(UserId + 1, Data),
-    Timestamp = erlang:now(),
-    NewUser = {user, UserId, Tweets ++ [{tweet, UserId, Timestamp, Tweet}], Subscriptions},
+    TweetId = "t" ++ integer_to_list(UserId) ++ integer_to_list(length(Tweets)),
+    DateTime = calendar:local_time(),
+    Timestamp = erlang:timestamp(),
+    NewUser = {user, UserId, Tweets ++ [{tweet, UserId, Timestamp, DateTime, TweetId, Tweet}], Subscriptions},
 
     {UsersBefore, [_|UsersAfter]} = lists:split(UserId, Data),
-    {lists:append([UsersBefore, [NewUser | UsersAfter]]), Timestamp}.
+    {lists:append([UsersBefore, [NewUser | UsersAfter]]), Timestamp, DateTime, TweetId}.
 
 subscribe_to_user(Data, UserId, UserIdToSubscribeTo) ->
     {user, UserId, Tweets, Subscriptions} = lists:nth(UserId + 1, Data),
