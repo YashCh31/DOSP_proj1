@@ -1,30 +1,19 @@
-%% 
-%% Basic implementation of the WebSocket API:
-%% http://dev.w3.org/html5/websockets/
-%% However, it's not completely compliant with the WebSocket spec.
-%% Specifically it doesn't handle the case where 'length' is included
-%% in the TCP packet, SSL is not supported, and you don't pass a 'ws://type url to it.
-%%
-%% It also defines a behaviour to implement for client implementations.
-%% @author Dave Bryson [http://weblog.miceda.org]
-%%
 -module(websocket_client).
 
 -behaviour(gen_server).
 
-%% API
+
 -export([start/3,start/4,write/1,close/0]).
 
-%% gen_server callbacks
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2,
 	 terminate/2, code_change/3]).
 
-%% Ready States
+
 -define(CONNECTING,0).
 -define(OPEN,1).
 -define(CLOSED,2).
 
-%% Behaviour definition
+
 -export([behaviour_info/1]).
 
 behaviour_info(callbacks) ->
@@ -51,11 +40,10 @@ init(Args) ->
     
     {ok,#state{socket=Sock,callback=Mod}}.
 
-%% Write to the server
 write(Data) ->
     gen_server:cast(?MODULE,{send,Data}).
 
-%% Close the socket
+
 close() ->
     gen_server:cast(?MODULE,close).
 
@@ -70,12 +58,12 @@ handle_cast(close,State) ->
     State1 = State#state{readystate=?CLOSED},
     {stop,normal,State1}.
 
-%% Start handshake
+
 handle_info({http,Socket,{http_response,{1,1},101,"Web Socket Protocol Handshake"}}, State) ->
     State1 = State#state{readystate=?CONNECTING,socket=Socket},
     {noreply, State1};
 
-%% Extract the headers
+
 handle_info({http,Socket,{http_header, _, Name, _, Value}},State) ->
     case State#state.readystate of
 	?CONNECTING ->
@@ -83,13 +71,11 @@ handle_info({http,Socket,{http_header, _, Name, _, Value}},State) ->
 	    State1 = State#state{headers=H,socket=Socket},
 	    {noreply,State1};
 	undefined ->
-	    %% Bad state should have received response first
 	    {stop,error,State}
     end;
 
-%% Once we have all the headers check for the 'Upgrade' flag 
+
 handle_info({http,Socket,http_eoh},State) ->
-    %% Validate headers, set state, change packet type back to raw
      case State#state.readystate of
 	?CONNECTING ->
 	     Headers = State#state.headers,
@@ -104,15 +90,13 @@ handle_info({http,Socket,http_eoh},State) ->
 		     {stop,error,State}
 	     end;
 	undefined ->
-	    %% Bad state should have received response first
 	    {stop,error,State}
     end;
 
-%% Handshake complete, handle packets
 handle_info({tcp, _Socket, Data},State) ->
     case State#state.readystate of
 	?OPEN ->
-	    D = unframe(binary_to_list(Data)),
+	    D = useUnframe(binary_to_list(Data)),
 	    Mod = State#state.callback,
 	    Mod:onmessage(D),
 	    {noreply,State};
@@ -141,17 +125,15 @@ terminate(Reason, _State) ->
 code_change(_OldVsn, State, _Extra) ->
     {ok, State}.
 
-%%--------------------------------------------------------------------
-%%% Internal functions
-%%--------------------------------------------------------------------
+% internal
 initial_request(Host,Path) ->
     "GET "++ Path ++" HTTP/1.1\r\nUpgrade: WebSocket\r\nConnection: Upgrade\r\n" ++ 
 	"Host: " ++ Host ++ "\r\n" ++
 	"Origin: http://" ++ Host ++ "/\r\n\r\n".
 
 
-unframe([0|T]) -> unframe1(T).
-unframe1([255]) -> [];
-unframe1([H|T]) -> [H|unframe1(T)].
+useUnframe([0|T]) -> useUnframe1(T).
+useUnframe1([255]) -> [];
+useUnframe1([H|T]) -> [H|useUnframe1(T)].
 
     
